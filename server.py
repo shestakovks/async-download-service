@@ -1,22 +1,19 @@
 import argparse
-
-from aiohttp import web
-import aiofiles
 import asyncio
-import os
 import logging
+import os
+from functools import partial
+
+import aiofiles
+from aiohttp import web
 
 logging.basicConfig(level=logging.INFO)
 logger: logging.Logger = logging.getLogger('download-server')
 
 
-delay = 0
-photos_dir = './test_photos'
-
-
-async def archive(request: web.Request) -> web.StreamResponse:
+async def archive(photo_dir: str, delay: int, request: web.Request) -> web.StreamResponse:
     archive_hash = request.match_info['archive_hash']
-    path_to_photos = os.path.join(photos_dir, archive_hash)
+    path_to_photos = os.path.join(photo_dir, archive_hash)
 
     if not os.path.exists(path_to_photos):
         raise web.HTTPNotFound(reason='Archive does not exist or was removed.')
@@ -84,19 +81,25 @@ def get_app_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == '__main__':
-
+def main():
     app_args = get_app_args()
 
     if app_args.quiet:
         logging.disable(logging.CRITICAL)
 
-    delay = app_args.delay or delay
-    photos_dir = app_args.path if app_args.path is not None else photos_dir
+    delay = app_args.delay or 0
+    photo_dir = app_args.path if app_args.path is not None else './test_photos'
 
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
-        web.get('/archive/{archive_hash}/', archive),
+        web.get(
+            '/archive/{archive_hash}/',
+            partial(archive, photo_dir, delay),
+        ),
     ])
     web.run_app(app)
+
+
+if __name__ == '__main__':
+    main()
