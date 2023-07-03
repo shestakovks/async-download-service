@@ -47,9 +47,8 @@ async def archive(photo_dir: str, delay: int, request: web.Request) -> web.Strea
 
     finally:
         if process.returncode is None:
-            process.terminate()
-
-        await process.communicate()
+            process.kill()
+            await process.communicate()
 
     return response
 
