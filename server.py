@@ -27,7 +27,7 @@ async def archive(photo_dir: str, delay: int, request: web.Request) -> web.Strea
 
     process = await asyncio.create_subprocess_exec(
         "zip",
-        *("-r", "-", "."),
+        "-r", "-", ".",
         cwd=path_to_photos,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
